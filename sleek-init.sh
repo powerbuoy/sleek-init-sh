@@ -2,7 +2,7 @@ dbUser=${1:-root}
 dbPass=${2:-bamsepuck}
 adminUser=${3:-siteadmin}
 adminPass=${4:-password}
-adminEmail=${5:-webmaster@localhost}
+adminEmail=${5:-webmaster@localhost.test}
 
 themeName=${PWD##*/}
 siteName="$(tr '[:lower:]' '[:upper:]' <<< ${themeName:0:1})${themeName:1}"
@@ -181,8 +181,8 @@ else
 	wp core install --url=$siteUrl --title=$siteName --admin_user=$adminUser --admin_password=$adminPass --admin_email=$adminEmail --skip-email
 
 	# Create start and blog page
-	wp post update 2 --post_title=Start --post_name=start --post_content=$frontpageTitle # NOTE: Risky to hard-code 2?? It's the default "Sample page" created by a fresh install...
-	blogId=$(wp post create --post_type=page --post_status=publish --post_author=1 --post_name=$blogUrl --post_title=$blogTitle --post_content=$blogDescription --porcelain)
+	wp post update 2 --post_title=Start --post_name=start --post_content="$frontpageTitle" # NOTE: Risky to hard-code 2?? It's the default "Sample page" created by a fresh install...
+	blogId=$(wp post create --post_type=page --post_status=publish --post_author=1 --post_name="$blogUrl" --post_title="$blogTitle" --post_content="$blogDescription" --porcelain)
 
 	# Use static front page
 	wp option update show_on_front 'page'
@@ -261,7 +261,7 @@ fi
 
 #############
 # NPM install
-if [ -f package.json ] && [ ! -d node_modules ]; then
+if [ -f wp-content/themes/sleek/package.json ] && [ ! -d wp-content/themes/sleek/node_modules ]; then
 	cd wp-content/themes/sleek
 
 	echo "Running NPM install"
@@ -272,7 +272,7 @@ if [ -f package.json ] && [ ! -d node_modules ]; then
 fi
 
 # Build
-if [ -f webpack.config.js ]; then
+if [ -f wp-content/themes/sleek/webpack.config.js ]; then
 	cd wp-content/themes/sleek
 
 	echo "Webpack build"
