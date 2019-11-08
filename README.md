@@ -1,1 +1,1 @@
-# sleek-init-sh
+Installs WordPress and Sleek in the current directory.
