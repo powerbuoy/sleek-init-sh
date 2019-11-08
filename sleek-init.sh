@@ -1,5 +1,8 @@
 dbUser=${1:-root}
 dbPass=${2:-bamsepuck}
+adminUser=${3:-siteadmin}
+adminPass=${4:-password}
+adminEmail=${5:-webmaster@localhost}
 
 themeName=${PWD##*/}
 siteName="$(tr '[:lower:]' '[:upper:]' <<< ${themeName:0:1})${themeName:1}"
@@ -32,7 +35,7 @@ Thumbs.db
 /*
 
 # Except for these files
-!.git
+!.git # TODO: needed?
 !.gitignore
 !.gitmodules
 !README.md
@@ -69,9 +72,11 @@ if ! [ -f .htaccess ]; then
 	cat > .htaccess << EOL
 php_value upload_max_filesize 64M
 php_value post_max_size 64M
+
 <IfModule mod_rewrite.c>
 	RewriteEngine On
 	RewriteBase /
+
 	RewriteRule ^index.php\$ - [L]
 	RewriteCond %{REQUEST_FILENAME} !-f
 	RewriteCond %{REQUEST_FILENAME} !-d
@@ -98,8 +103,6 @@ fi
 ###########
 # WordPress
 if ! [ -d wp-admin/ ]; then
-	echo "Downloading WordPress"
-
 	wp core download --skip-content
 fi
 
@@ -120,16 +123,17 @@ mysql -u$dbUser -p$dbPass -e "CREATE DATABASE IF NOT EXISTS ${dbName}"
 if [ -f db.sql ]; then
 	echo "Importing existing database"
 
-	# Make sure not duplicate DB
+	# Drop previous DB
 	mysql -u$dbUser -p$dbPass -e "DROP DATABASE ${dbName}"
 	mysql -u$dbUser -p$dbPass -e "CREATE DATABASE ${dbName}"
 
-	# Import existing DB
+	# Import new
 	mysql -u$dbUser -p$dbPass $dbName < db.sql
 
-	# Check db prefix
+	# Check DB prefix
 	dbPrefix=$(mysql $dbName -u$dbUser -p$dbPass -sse "SELECT DISTINCT SUBSTRING(TABLE_NAME FROM 1 FOR (LENGTH(TABLE_NAME) - 8)) FROM information_schema.TABLES WHERE TABLE_NAME LIKE '%postmeta'")
 
+	# Custom DB prefix
 	if ! [ $dbPrefix = "wp_" ]; then
 		echo "Changing DB prefix to $dbPrefix"
 
@@ -149,12 +153,15 @@ if [ -f db.sql ]; then
 		cat > .htaccess << EOL
 php_value upload_max_filesize 64M
 php_value post_max_size 64M
+
 <IfModule mod_rewrite.c>
 	RewriteEngine On
 	RewriteBase /
+
 	# Route wp-content to live site
 	RewriteCond %{REQUEST_URI} ^/wp-content/uploads/[^\/]*/.*\$
 	RewriteRule ^(.*)\$ $currSiteUrl/\$1 [QSA,L]
+
 	RewriteRule ^index.php\$ - [L]
 	RewriteCond %{REQUEST_FILENAME} !-f
 	RewriteCond %{REQUEST_FILENAME} !-d
@@ -166,30 +173,36 @@ EOL
 else
 	echo "Doing fresh install"
 
-	wp core install --url=$siteUrl --title=$siteName --admin_user=siteadmin --admin_password=password --admin_email=me@mydomain.com --skip-email
+	frontpageTitle="Välkommen till förstasidan!"
+	blogTitle="Blogg"
+	blogDescription="Välkommen till Bloggen!"
+	blogUrl="blogg"
+
+	wp core install --url=$siteUrl --title=$siteName --admin_user=$adminUser --admin_password=$adminPass --admin_email=$adminEmail --skip-email
 
 	# Create start and blog page
-	wp post update 2 --post_title=Start --post_name=start --post_content="Välkommen!"
-	blogId=$(wp post create --post_type=page --post_status=publish --post_author=1 --post_name=blogg --post_title=Blogg --post_content="Välkommen till bloggen!" --porcelain)
+	wp post update 2 --post_title=Start --post_name=start --post_content=$frontpageTitle # NOTE: Risky to hard-code 2?? It's the default "Sample page" created by a fresh install...
+	blogId=$(wp post create --post_type=page --post_status=publish --post_author=1 --post_name=$blogUrl --post_title=$blogTitle --post_content=$blogDescription --porcelain)
 
 	# Use static front page
 	wp option update show_on_front 'page'
-	wp option update page_on_front 2 # NOTE: Risky to hard-code 2?? It's the default "Sample page" created by a fresh install...
+	wp option update page_on_front 2 # NOTE: Hard-coded 2 again
 	wp option update page_for_posts $blogId
 
 	# Update permalink structure
-	wp option update permalink_structure "/blogg/%postname%/"
+	wp option update permalink_structure "/$blogUrl/%postname%/"
 
 	# Disable comments
 	wp option update default_comment_status closed
 
-	# Time/date formats
+	# Time/date formats (TODO: hard-coded...)
 	wp option update date_format "j F, Y"
 	wp option update time_format "H:i"
 fi
 
 ###############
 # Install sv_SE
+# TODO hardcoded
 wp language core install sv_SE
 wp site switch-language sv_SE
 
@@ -241,32 +254,32 @@ if ! [ -d wp-content/themes/sleek/ ]; then
 
 	# Active the theme
 	wp theme activate sleek
-# Sleek already exists
-else
-	# Move into sleek folder
-	cd wp-content/themes/sleek
 
-	# Composer install
-	if [ -f composer.json ] && [ ! -d vendor ]; then
-		echo "Running Composer install"
-
-		composer install
-	fi
+	# Move back
+	cd -
 fi
 
 #############
 # NPM install
 if [ -f package.json ] && [ ! -d node_modules ]; then
+	cd wp-content/themes/sleek
+
 	echo "Running NPM install"
 
 	npm install
+
+	cd -
 fi
 
 # Build
 if [ -f webpack.config.js ]; then
+	cd wp-content/themes/sleek
+
 	echo "Webpack build"
 
 	npm run build
+
+	cd -
 fi
 
 echo "All done! $siteUrl"
