@@ -80,6 +80,7 @@ php_value post_max_size 64M
 EOL
 fi
 
+#########################
 # If sleek already exists
 if [ -d wp-content/themes/sleek ]; then
 	# Make sure vendor is installed before we continue
@@ -223,18 +224,22 @@ fi
 
 chmod 777 wp-content/uploads/
 
+######################
 # Sleek does not exist
 if ! [ -d wp-content/themes/sleek/ ]; then
 	echo "Installing Sleek"
 
 	wp theme install https://github.com/powerbuoy/sleek/archive/master.zip
 
+	# Move into sleek folder
 	cd wp-content/themes/sleek
 
 	echo "Running Composer install"
 
+	# Make sure vendor/ exists before we ...
 	composer install
 
+	# Active the theme
 	wp theme activate sleek
 # Sleek already exists
 else
@@ -249,6 +254,7 @@ else
 	fi
 fi
 
+#############
 # NPM install
 if [ -f package.json ] && [ ! -d node_modules ]; then
 	echo "Running NPM install"
@@ -261,13 +267,6 @@ if [ -f webpack.config.js ]; then
 	echo "Webpack build"
 
 	npm run build
-fi
-
-# Gulp
-if [ -f gulpfile.js ]; then
-	echo "Gulp"
-
-	gulp
 fi
 
 echo "All done! $siteUrl"
