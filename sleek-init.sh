@@ -282,4 +282,15 @@ if [ -f wp-content/themes/sleek/webpack.config.js ]; then
 	cd -
 fi
 
+# Build
+if [ -f wp-content/themes/sleek/gulpfile.js ]; then
+	cd wp-content/themes/sleek
+
+	echo "Gulp build"
+
+	gulp
+
+	cd -
+fi
+
 echo "All done! $siteUrl"
