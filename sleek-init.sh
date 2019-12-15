@@ -131,7 +131,8 @@ if [ -f db.sql ]; then
 	mysql -u$dbUser -p$dbPass $dbName < db.sql
 
 	# Check DB prefix
-	dbPrefix=$(mysql $dbName -u$dbUser -p$dbPass -sse "SELECT DISTINCT SUBSTRING(TABLE_NAME FROM 1 FOR (LENGTH(TABLE_NAME) - 8)) FROM information_schema.TABLES WHERE TABLE_NAME LIKE '%postmeta'")
+	# NOTE: Doesn't work with multiple installations on same server
+	dbPrefix="wp_" # $(mysql $dbName -u$dbUser -p$dbPass -sse "SELECT DISTINCT SUBSTRING(TABLE_NAME FROM 1 FOR (LENGTH(TABLE_NAME) - 8)) FROM information_schema.TABLES WHERE TABLE_NAME LIKE '%postmeta'")
 
 	# Custom DB prefix
 	if ! [ $dbPrefix = "wp_" ]; then
