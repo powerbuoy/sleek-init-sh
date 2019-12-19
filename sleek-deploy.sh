@@ -8,9 +8,16 @@ echo "Deploying $branch to $remote...\n"
 cd $root
 
 # Make sure working directory is clean
-if [ -n "$(git status --porcelain)" ]; then
+# if [ -n "$(git status --porcelain)" ]; then
+if [ -n "$(git diff origin/$branch..HEAD)" ]; then
 	echo "ERROR: Working directory not clean - refuse to deploy\n"
 	git status
+	exit 1
+fi
+
+# Make sure this is a sleek-next project
+if [ -d wp-content/themes/sleek/acf ]; then
+	echo "ERROR: This appears to be an old sleek project - just do \$ git push production master instead"
 	exit 1
 fi
 
