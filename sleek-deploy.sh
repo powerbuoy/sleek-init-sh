@@ -34,8 +34,13 @@ git rm -r --cached --quiet .
 cd wp-content/themes/sleek
 
 # Make sure dependencies are installed
-composer install
-npm install
+if ! [ -d vendor ]; then
+	composer install
+fi
+
+if ! [ -d node_modules ]; then
+	npm install
+fi
 
 # Build production assets
 npm run build
