@@ -43,7 +43,14 @@ if ! [ -d node_modules ]; then
 fi
 
 # Build production assets
-npm run build
+if ! [ -d dist/assets/fontello ]; then
+	npm run build
+else
+	npm run buildonly
+fi
+
+# Delete potential nested git repositories in vendor
+find vendor -type d | grep .git | xargs rm -rf
 
 # Re-add all files (now with .prodignore), commit and push
 git add --all
