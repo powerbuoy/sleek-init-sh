@@ -2,13 +2,20 @@ remote=${1:-staging}
 branch=$(git symbolic-ref --short HEAD)
 root=$(git rev-parse --show-toplevel)
 
+# TODO: confirm production pushes y/n
+
 echo "Deploying $branch to $remote...\n"
 
 # Make sure we're in the GIT root
 cd $root
 
 # Make sure working directory is clean
-# if [ -n "$(git status --porcelain)" ]; then
+if [ -n "$(git status --porcelain)" ]; then
+	echo "ERROR: Working directory not clean - refuse to deploy\n"
+	git status
+	exit 1
+fi
+
 if [ -n "$(git diff origin/$branch..HEAD)" ]; then
 	echo "ERROR: Working directory not clean - refuse to deploy\n"
 	git status
@@ -34,7 +41,7 @@ git rm -r --cached --quiet .
 cd wp-content/themes/sleek
 
 # Make sure dependencies are installed
-if ! [ -d vendor ]; then
+if ! [ -f vendor/autoload.php ]; then
 	composer install
 fi
 
@@ -78,6 +85,9 @@ echo "Deployed $branch to $remote!"
 # fi
 #
 # # Create prod branch
+# # https://stackoverflow.com/questions/26961371/switch-on-another-branch-create-if-not-exists-without-checking-if-already-exi
+# # git checkout sleek_deploy || git checkout -b sleek_deploy && git merge master
+# # https://stackoverflow.com/questions/2862590/how-to-replace-master-branch-in-git-entirely-from-another-branch
 # git checkout -b sleek_tmp_build
 #
 # # Copy each .prodignore to .gitignore
