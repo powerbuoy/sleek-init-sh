@@ -278,7 +278,7 @@ if [ -f wp-content/themes/sleek/webpack.config.js ]; then
 
 	echo "Webpack build"
 
-	npm run build
+	npm run buildall
 
 	cd -
 fi
