@@ -51,9 +51,10 @@ fi
 
 # Build production assets
 if ! [ -d dist/assets/fontello ]; then
+	npm run fontello
 	npm run build
 else
-	npm run buildonly
+	npm run build
 fi
 
 # Delete potential nested git repositories in vendor
