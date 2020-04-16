@@ -1,4 +1,5 @@
 <?php
+# $ php sleek-readme.php "/Users/powerbuoy/Sites/sleek-packages/**/README.md" | pbcopy
 $path = $argv[1] ?? null;
 
 if ($path) {
