@@ -22,9 +22,16 @@ if [ -n "$(git diff origin/$branch..HEAD)" ]; then
 	exit 1
 fi
 
+# TODO: Make sure remote exists https://stackoverflow.com/questions/12170459/check-if-git-remote-exists-before-first-push
+# if [ git ls-remote --exit-code $remote ]; then
+# 	echo "ERROR: Remote $remote does not exist\n"
+# 	git remote -v
+# 	exit 1
+# fi
+
 # Make sure this is a sleek-next project
 if [ -d wp-content/themes/sleek/acf ]; then
-	echo "ERROR: This appears to be an old sleek project - just do \$ git push production master instead"
+	echo "ERROR: This appears to be an old sleek project - run \$ git push production master instead"
 	exit 1
 fi
 
@@ -59,6 +66,9 @@ fi
 
 # Delete potential nested git repositories in vendor
 find vendor -type d | grep .git | xargs rm -rf
+
+# Make sure we're in the GIT root again (in case sleek is installed as a submodule)
+cd $root
 
 # Re-add all files (now with .prodignore), commit and push
 git add --all
